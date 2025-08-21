@@ -15,6 +15,7 @@ configurable string password = ?;
 
 public function main() returns error? {
     rabbitmq:Client orderClient = check new (host, port, {username: username, password: password, virtualHost: username});
+    check orderClient->queueDeclare("Orders");
     Order newOrder = {
         orderId: 1,
         productName: "Laptop",
@@ -23,7 +24,7 @@ public function main() returns error? {
     };
     check orderClient->publishMessage({
         content: newOrder,
-        routingKey: "Test",
+        routingKey: "Orders",
         exchange: ""
     });
 }
