@@ -1,7 +1,7 @@
 import ballerina/log;
 import ballerinax/rabbitmq;
 
-listener rabbitmq:Listener eventListener = new (host = host, port = port, username = username, password = password);
+listener rabbitmq:Listener eventListener = new (host = host, port = port, username = username, password = password, virtualHost = username);
 
 service rabbitmq:Service "Orders" on eventListener {
     remote function onMessage(rabbitmq:AnydataMessage message, rabbitmq:Caller caller) returns error? {
