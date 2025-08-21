@@ -23,7 +23,8 @@ public function main() returns error? {
     };
     check orderClient->publishMessage({
         content: newOrder,
-        routingKey: "Orders"
+        routingKey: "Test",
+        exchange: ""
     });
 }
 
