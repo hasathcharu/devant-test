@@ -1,0 +1,4 @@
+[package]
+org = "harithawso2"
+name = "event_integration"
+version = "0.1.0"
