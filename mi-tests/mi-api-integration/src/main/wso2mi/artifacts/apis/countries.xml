@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/countries" name="countries" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="GET" uri-template="/data">
+        <inSequence>
+        <http.get configKey="my-connection">
+    <relativePath >/countries</relativePath>
+    <headers >[]</headers>
+    <forceScAccepted >false</forceScAccepted>
+    <disableChunking >false</disableChunking>
+    <forceHttp10 >false</forceHttp10>
+    <noKeepAlive >false</noKeepAlive>
+    <responseVariable >response</responseVariable>
+    <overwriteBody >false</overwriteBody>
+            </http.get>
+            <payloadFactory media-type="json" template-type="default">
+                <format>${vars.response.payload}</format>
+            </payloadFactory>
+            <respond/>
+        </inSequence>
+        <faultSequence>
+        </faultSequence>
+    </resource>
+</api>
