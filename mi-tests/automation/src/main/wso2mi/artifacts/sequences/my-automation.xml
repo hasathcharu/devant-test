@@ -3,5 +3,4 @@
     <log category="INFO" logMessageID="false" logFullPayload="false">
         <message>&quot;HELLO&quot;</message>
     </log>
-    <drop/>
 </sequence>
