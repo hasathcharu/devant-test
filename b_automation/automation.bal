@@ -3,7 +3,7 @@ import ballerina/log;
 
 public function main() returns error? {
     do {
-        io:println("Hello from Another Branch", "Update 10");
+        io:println("Hello from Another Branch", "Update 11");
     } on fail error e {
         log:printError("Error occurred", 'error = e);
         return e;
