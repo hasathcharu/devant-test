@@ -1,5 +1,5 @@
 import ballerina/http;
-import ballerina/log;
+// import ballerina/log;
 
 listener http:Listener httpDefaultListener = http:getDefaultListener();
 
