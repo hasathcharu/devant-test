@@ -7,7 +7,7 @@ public function main() returns error? {
         int i = 0;
         while i < 10000 {
             io:println("Hello World ", i);
-            runtime:sleep(2);
+            runtime:sleep(10);
             i += 1;
         }
     } on fail error e {
