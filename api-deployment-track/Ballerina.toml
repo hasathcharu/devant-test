@@ -1,0 +1,8 @@
+[package]
+org = "haritha"
+name = "deployment_track"
+version = "0.1.0"
+title = "deployment-track"
+
+[build-options]
+sticky = true
