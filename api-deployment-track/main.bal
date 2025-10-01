@@ -1,9 +1,9 @@
 import ballerina/http;
 import ballerina/log;
 
-listener http:Listener httpDefaultListener = http:getDefaultListener();
+// listener http:Listener httpDefaultListener = http:getDefaultListener();
 
-service / on httpDefaultListener {
+service / on new http:Listener(9090) {
     resource function get data() returns error|json|http:InternalServerError {
         do {
             log:printInfo("Main Deployment Track");
