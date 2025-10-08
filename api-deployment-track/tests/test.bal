@@ -13,7 +13,7 @@ function testGetDataHappyPath() returns error? {
     string response = check clientEp->/data();
     
     // Validation: Verify response contains the expected string "Main Deployment Track"
-    test:assertEquals(response, "Main Deployment Track", "Response should contain 'Main Deployment Track'");
+    test:assertEquals(response, "Main Deployment Track j", "Response should contain 'Main Deployment Track'");
 }
 
 // Test for Scenario 1.2 (Error Path) - Simulate internal service failure
