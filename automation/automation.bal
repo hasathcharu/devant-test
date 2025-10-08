@@ -7,7 +7,7 @@ public function main() returns error? {
         int i = 0;
         while i < 10000 {
             if (i % 2 == 0) {
-                io:println("Hello World ", i);   
+                io:println(getDefaultMessage(), i);
             } else {
                 io:println("This is a very long log message to simulate very long text on the runtime logs view component. Let's see how it behaves with a large character count. I just want to test the UI.", i);
             }
@@ -18,4 +18,8 @@ public function main() returns error? {
         log:printError("Error occurred", 'error = e);
         return e;
     }
+}
+
+function getDefaultMessage() returns string {
+    return "Hello World";
 }
