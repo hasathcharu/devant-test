@@ -1,0 +1,8 @@
+[package]
+org = "haritha"
+name = "policy_test_api"
+version = "0.1.0"
+title = "policy-test-api"
+
+[build-options]
+sticky = true
