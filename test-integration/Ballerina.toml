@@ -1,0 +1,8 @@
+[package]
+org = "haritha"
+name = "test_integration"
+version = "0.1.0"
+title = "test-integration"
+
+[build-options]
+sticky = true
