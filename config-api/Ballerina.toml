@@ -1,0 +1,8 @@
+[package]
+org = "haritha"
+name = "config_api"
+version = "0.1.0"
+title = "config-api"
+
+[build-options]
+sticky = true
