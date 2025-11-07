@@ -1,0 +1,4 @@
+[package]
+org = "harithadev"
+name = "personal_assistant"
+version = "1.0.0"
