@@ -14,9 +14,9 @@ configurable record {
 
 configurable string name = "defaultUser";
 
-configurable map<record { string id; string value; }> demoConfigMap = ?;
+configurable map<string> demoConfigMap = ?;
 
-configurable map<record { string id; string value; }> demoConfigMapDefaultable = {
-    key1: { id: "1", value: "value1" },
-    key2: { id: "2", value: "value2" }
+configurable map<string> demoConfigMapDefaultable = {
+    key1: "value1",
+    key2: "value2"
 };
