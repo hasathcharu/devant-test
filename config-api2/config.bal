@@ -4,6 +4,7 @@ configurable record {
     int port;
     string username;
     string password;
+    string another;
     record {|
         string nestedKey;
         int nestedValue;
