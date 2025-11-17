@@ -4,6 +4,10 @@ configurable record {
     int port;
     string username;
     string password;
+    record {|
+        string nestedKey;
+        int nestedValue;
+    |} nestedRecord;
 } demoConfig = ?;
 
 configurable record {
