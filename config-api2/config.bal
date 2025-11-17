@@ -1,4 +1,4 @@
-configurable string color = ?;
+configurable string color = "red";
 configurable record {
     string host;
     int port;
@@ -10,17 +10,3 @@ configurable record {
     |} nestedRecord;
 } demoConfig = ?;
 
-configurable record {
-    string name;
-} demoConfigDefaultable = {
-    name: "defaultName"
-};
-
-configurable string name = "defaultUser";
-
-configurable map<string> demoConfigMap = ?;
-
-configurable map<string> demoConfigMapDefaultable = {
-    key1: "value1",
-    key2: "value2"
-};
