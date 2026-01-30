@@ -31,9 +31,8 @@ jobs:
 
       - name: Tag Docker image
         working-directory: ${{ env.PROJECT_PATH }}
-        run: docker tag ${{
-          env.PROJECT_PATH }}:latest docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.PROJECT_PATH }}:${{ env.TAG }}
+        run: docker tag ${PROJECT_PATH//-/_}:latest docker.io/${{ secrets.DOCKER_USERNAME }}/${PROJECT_PATH//-/_}:${{ env.TAG }}
 
       - name: Push Docker image
         working-directory: ${{ env.PROJECT_PATH }}
-        run: docker push docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.PROJECT_PATH }}:${{ env.TAG }}
+        run: docker push docker.io/${{ secrets.DOCKER_USERNAME }}/${PROJECT_PATH//-/_}:${{ env.TAG }}
