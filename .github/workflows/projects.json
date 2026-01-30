@@ -22,5 +22,11 @@
     "repository": "config_api2",
     "tag": "latest",
     "ballerina_version": "2201.12.10"
+  },
+  {
+    "path": "api-deployment-track",
+    "repository": "api_deployment_track",
+    "tag": "latest",
+    "ballerina_version": "2201.12.10"
   }
 ]
