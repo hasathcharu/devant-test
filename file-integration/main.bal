@@ -8,6 +8,7 @@ service ftp:Service on weatherListener {
         do {
             foreach var addFile in event.addedFiles {
                 log:printInfo("File added:" + addFile.name);
+                log:printInfo("Random Output");
             }
         } on fail error err {
             // handle error
