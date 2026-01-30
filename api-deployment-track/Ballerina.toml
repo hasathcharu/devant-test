@@ -1,9 +1,9 @@
 [package]
 org = "haritha"
-name = "deployment_track"
+name = "api_deployment_track"
 version = "0.1.0"
-title = "deployment-track"
-distribution="2201.12.9"
+title = "api-deployment-track"
+distribution="2201.12.10"
 
 [build-options]
 sticky = true
