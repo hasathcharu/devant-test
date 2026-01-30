@@ -7,7 +7,6 @@ service / on httpDefaultListener {
     resource function get .() returns string|http:InternalServerError|error {
         do {
             log:printInfo("Configured Color: " + color);
-            log:printInfo("Service executed successfully.");
             return "Configured Color: " + color;
         } on fail error err {
             // handle error
