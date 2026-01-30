@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_PATH: config-api
+      TAG: latest
 
     steps:
       - name: Checkout repository
@@ -28,6 +29,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Tag Docker image
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: docker tag ${{
+          env.PROJECT_PATH }}:latest docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.PROJECT_PATH }}:${{ env.TAG }}
+
       - name: Push Docker image
         working-directory: ${{ env.PROJECT_PATH }}
-        run: docker push docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.PROJECT_PATH }}:latest
+        run: docker push docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.PROJECT_PATH }}:${{ env.TAG }}
