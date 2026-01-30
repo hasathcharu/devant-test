@@ -6,10 +6,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      build_all:
-        description: 'Build all projects ignoring change detection'
-        type: boolean
-        default: true
+      build_path:
+        description: 'Specific project path to build, or * to build all projects'
+        type: string
+        default: '*'
 
 jobs:
   load-config:
@@ -25,53 +25,20 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
-            # For push events, compare before and after
-            BEFORE="${{ github.event.before }}"
-            if [ "$BEFORE" == "0000000000000000000000000000000000000000" ]; then
-              # Initial push, get all files
-              CHANGED_FILES=$(git ls-files)
-            else
-              CHANGED_FILES=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
-            fi
-          else
-            # For workflow_dispatch, fall back to HEAD~1
-            CHANGED_FILES=$(git diff --name-only HEAD~1 2>/dev/null || git diff --name-only $(git rev-list --max-parents=0 HEAD))
-          fi
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: .github/scripts/get-changed-files.sh
 
       - name: Load project config
         id: set-matrix
-        run: |
-          ALL_PROJECTS=$(cat .github/workflows/projects.json)
-
-          # Check if build_all is enabled (for workflow_dispatch)
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.build_all }}" == "true" ]; then
-            echo "Building all projects (manual trigger with build_all=true)"
-            echo "projects=$(echo "$ALL_PROJECTS" | jq -c '.')" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          CHANGED_FILES="${{ steps.changed-files.outputs.changed_files }}"
-
-          # Filter projects to only those with changes
-          FILTERED_PROJECTS=$(echo "$ALL_PROJECTS" | jq -c --arg changed "$CHANGED_FILES" '
-            [.[] | select(.path as $p | $changed | split("\n") | any(startswith($p + "/") or . == $p))]
-          ')
-
-          echo "Filtered projects: $FILTERED_PROJECTS"
-
-          if [ "$FILTERED_PROJECTS" == "[]" ]; then
-            echo "No projects have changes, skipping build"
-            echo "projects=[]" >> $GITHUB_OUTPUT
-          else
-            echo "projects=$FILTERED_PROJECTS" >> $GITHUB_OUTPUT
-          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BUILD_PATH: ${{ inputs.build_path }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.changed_files }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: .github/scripts/load-projects.sh
 
   build:
     name: Build ${{ matrix.project.path }}
