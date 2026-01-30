@@ -1,0 +1,20 @@
+[
+  {
+    "path": "config-api",
+    "repository": "config_api",
+    "tag": "latest",
+    "ballerina_version": "2201.12.10"
+  },
+  {
+    "path": "automation",
+    "repository": "automation",
+    "tag": "latest",
+    "ballerina_version": "2201.12.10"
+  },
+  {
+    "path": "file-integration",
+    "repository": "file_integration",
+    "tag": "latest",
+    "ballerina_version": "2201.12.10"
+  }
+]
