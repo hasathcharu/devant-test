@@ -13,13 +13,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get changed files
+        id: changed-files
+        run: |
+          # Get changed files compared to previous commit
+          CHANGED_FILES=$(git diff --name-only HEAD~1 2>/dev/null || git diff --name-only $(git rev-list --max-parents=0 HEAD))
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Load project config
         id: set-matrix
-        run: echo "projects=$(cat .github/workflows/projects.json | jq -c)" >> $GITHUB_OUTPUT
+        run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.changed_files }}"
+          ALL_PROJECTS=$(cat .github/workflows/projects.json)
+
+          # Filter projects to only those with changes
+          FILTERED_PROJECTS=$(echo "$ALL_PROJECTS" | jq -c --arg changed "$CHANGED_FILES" '
+            [.[] | select(.path as $p | $changed | split("\n") | any(startswith($p + "/") or . == $p))]
+          ')
+
+          echo "Filtered projects: $FILTERED_PROJECTS"
+
+          if [ "$FILTERED_PROJECTS" == "[]" ]; then
+            echo "No projects have changes, skipping build"
+            echo "projects=[]" >> $GITHUB_OUTPUT
+          else
+            echo "projects=$FILTERED_PROJECTS" >> $GITHUB_OUTPUT
+          fi
 
   build:
     name: Build ${{ matrix.project.path }}
     needs: load-config
+    if: ${{ needs.load-config.outputs.projects != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
