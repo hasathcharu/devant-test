@@ -21,8 +21,7 @@ if [ "$EVENT_NAME" == "workflow_dispatch" ]; then
     MATCHED_PROJECT=$(echo "$ALL_PROJECTS" | jq -c --arg path "$BUILD_PATH" '[.[] | select(.path == $path)]')
     if [ "$MATCHED_PROJECT" == "[]" ]; then
       echo "Error: No project found matching path '$BUILD_PATH'"
-      echo "projects=[]" >> "$GITHUB_OUTPUT"
-      exit 0
+      exit 1
     fi
     echo "Building specific project: $BUILD_PATH"
     echo "projects=$MATCHED_PROJECT" >> "$GITHUB_OUTPUT"
