@@ -12,6 +12,7 @@ public function main() returns error? {
                 io:println("This is a very long log message to simulate very long text on the runtime logs view component. Let's see how it behaves with a large character count. I just want to test the UI.", i);
             }
             runtime:sleep(1);
+            io:println("Completed iteration: ", i);
             i += 1;
         }
     } on fail error e {
