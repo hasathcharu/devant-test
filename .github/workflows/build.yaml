@@ -51,10 +51,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Read Ballerina TOML File
+        working-directory: ${{ matrix.project.path }}
+        run: |
+          set -e
+
+          REPOSITORY=$(yq -oy '.package.name' Ballerina.toml)
+          [ -n "$REPOSITORY" ] || { echo "Error: package.name not found in Ballerina.toml"; exit 1; }
+          echo "REPOSITORY=$REPOSITORY" >> $GITHUB_ENV
+          echo "Repository: $REPOSITORY"
+
+          BALLERINA_VERSION=$(yq -oy '.package.distribution' Ballerina.toml)
+          [ -n "$BALLERINA_VERSION" ] || { echo "Error: package.distribution not found in Ballerina.toml"; exit 1; }
+          echo "BALLERINA_VERSION=$BALLERINA_VERSION" >> $GITHUB_ENV
+          echo "Ballerina Version: $BALLERINA_VERSION"
+
+          TAG=$(yq -oy '.package.version' Ballerina.toml)
+          [ -n "$TAG" ] || { echo "Error: package.version not found in Ballerina.toml"; exit 1; }
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "Tag: $TAG"
+
       - name: Set up Ballerina
         uses: ballerina-platform/setup-ballerina@v1.1.3
         with:
-          version: ${{ matrix.project.ballerina_version }}
+          version: ${{ env.BALLERINA_VERSION }}
 
       - name: Build Docker image
         working-directory: ${{ matrix.project.path }}
@@ -68,8 +88,8 @@ jobs:
 
       - name: Tag Docker image
         working-directory: ${{ matrix.project.path }}
-        run: docker tag ${{ matrix.project.repository }}:latest docker.io/${{ secrets.DOCKER_USERNAME }}/${{ matrix.project.repository }}:${{ matrix.project.tag }}
+        run: docker tag ${{ env.REPOSITORY }}:latest docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.REPOSITORY }}:${{ env.TAG }}
 
       - name: Push Docker image
         working-directory: ${{ matrix.project.path }}
-        run: docker push docker.io/${{ secrets.DOCKER_USERNAME }}/${{ matrix.project.repository }}:${{ matrix.project.tag }}
+        run: docker push docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.REPOSITORY }}:${{ env.TAG }}

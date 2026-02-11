@@ -3,6 +3,7 @@ org = "haritha"
 name = "config_api"
 version = "0.1.0"
 title = "config-api"
+distribution= "2201.12.10"
 
 [build-options]
 sticky = true
