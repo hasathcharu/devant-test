@@ -64,6 +64,7 @@ jobs:
         run: bal build --cloud=docker
 
       - name: Read TOML file
+        working-directory: ${{ matrix.project.path }}
         run: |
           VERSION=$(yq -oy '.package.org' Ballerina.toml)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
