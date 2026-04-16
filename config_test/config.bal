@@ -1,2 +1,2 @@
 configurable string greeting = ?;
-configurable string greeting2 = ?;
+configurable string greeting3 = ?;
