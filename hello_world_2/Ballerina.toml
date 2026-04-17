@@ -1,0 +1,9 @@
+[package]
+org = "haritha"
+name = "hello_world_2"
+version = "0.1.0"
+distribution = "2201.13.1"
+title = "hello-world-2"
+
+[build-options]
+sticky = true
