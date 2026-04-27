@@ -5,7 +5,7 @@ listener rabbitmq:Listener eventListener = new (host = host, port = port, connec
 service rabbitmq:Service "Orders" on eventListener {
     remote function onMessage(rabbitmq:AnydataMessage message, rabbitmq:Caller caller) returns error? {
         do {
-            log:printInfo("Received message V2: " + message.toString() + "\n");
+            log:printInfo("Received message V3: " + message.toString() + "\n");
         } on fail error err {
             // handle error
             return error("unhandled error", err);
