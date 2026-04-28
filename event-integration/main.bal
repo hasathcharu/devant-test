@@ -1,13 +1,12 @@
 import ballerina/log;
 import ballerinax/rabbitmq;
 
-log:printInfo("Starting RabbitMQ Listener V4...");
-listener rabbitmq:Listener eventListener = new (host = host, port = port, connectionData = {username:username, password:password, virtualHost:username});
+listener rabbitmq:Listener eventListener = new (host = host, port = port, connectionData = {username: username, password: password, virtualHost: username});
 
 service rabbitmq:Service "Orders" on eventListener {
     remote function onMessage(rabbitmq:AnydataMessage message, rabbitmq:Caller caller) returns error? {
         do {
-            log:printInfo("Received message V3: " + message.toString() + "\n");
+            log:printInfo("Received message V6: " + message.toString() + "\n");
         } on fail error err {
             // handle error
             return error("unhandled error", err);
