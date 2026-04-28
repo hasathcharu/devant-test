@@ -1,5 +1,7 @@
 import ballerina/log;
 import ballerinax/rabbitmq;
+
+log:printInfo("Starting RabbitMQ Listener V4...");
 listener rabbitmq:Listener eventListener = new (host = host, port = port, connectionData = {username:username, password:password, virtualHost:username});
 
 service rabbitmq:Service "Orders" on eventListener {
