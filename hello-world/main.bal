@@ -8,7 +8,7 @@ service / on httpDefaultListener {
         do {
             log:printInfo("Greeting: " + greeting);
             log:printInfo("Greeting2: " + greeting2);
-            return "Hello, World V6! Greeting: " + greeting;
+            return "Hello, World V7! Greeting: " + greeting;
         } on fail error err {
             // handle error
             return error("unhandled error", err);
