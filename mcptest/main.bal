@@ -15,8 +15,8 @@ configurable string testValue = ?;
 }
 service mcp:Service /mcp on mcpListener {
     @mcp:Tool
-    remote function add(int a, int b) returns int {
+    remote function add(int a, int b, int c) returns int {
         log:printInfo(testValue);
-        return a + b;
+        return a + b + c;
     }
 }
