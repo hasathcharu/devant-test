@@ -17,6 +17,11 @@ service mcp:Service /mcp on mcpListener1 {
     remote function add(int a, int b) returns int {
         return baseValue + a + b;
     }
+
+    @mcp:Tool
+    remote function multiply(int a, int b) returns int {
+        return a * b;
+    }
 }
 
 listener mcp:Listener mcpListener2 = new (9092);
