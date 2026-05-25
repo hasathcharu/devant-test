@@ -1,0 +1,29 @@
+schemaVersion: 1.1
+
+endpoints:
+  - name: mcp_add
+    displayName: Add
+    service:
+      basePath: /
+      port: 9090
+    type: REST
+    networkVisibilities:
+      - Public
+  - name: mcp_subtract
+    displayName: Subtract
+    service:
+      basePath: /
+      port: 9092
+    type: REST
+    networkVisibilities:
+      - Public
+      - Project
+      - Organization
+  - name: http_hello
+    displayName: Hello
+    service:
+      basePath: /
+      port: 9094
+    type: REST
+    networkVisibilities:
+      - Public
