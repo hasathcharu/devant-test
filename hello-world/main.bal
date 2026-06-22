@@ -4,7 +4,7 @@ import ballerina/log;
 listener http:Listener httpDefaultListener = http:getDefaultListener();
 
 service / on httpDefaultListener {
-    resource function get .() returns string|http:InternalServerError|error {
+    resource function get hello() returns string|http:InternalServerError|error {
         do {
             log:printInfo("Greeting: " + greeting);
             log:printInfo("Greeting2: " + greeting2);
