@@ -4,7 +4,7 @@ endpoints:
   - name: orders
     displayName: Orders
     service:
-      basePath: /
+      basePath: /api
       port: 8090
     type: REST
     networkVisibilities:
@@ -13,7 +13,7 @@ endpoints:
   - name: management
     displayName: Management
     service:
-      basePath: /
+      basePath: /workflow
       port: 8234
     type: REST
     networkVisibilities:
