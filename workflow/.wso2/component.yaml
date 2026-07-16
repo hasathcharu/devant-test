@@ -1,0 +1,21 @@
+schemaVersion: 1.1
+
+endpoints:
+  - name: orders
+    displayName: Orders
+    service:
+      basePath: /
+      port: 8090
+    type: REST
+    networkVisibilities:
+      - Public
+    schemaFilePath: openapi.yaml
+  - name: management
+    displayName: Management
+    service:
+      basePath: /
+      port: 8234
+    type: REST
+    networkVisibilities:
+      - Public
+    schemaFilePath: openapi.yaml

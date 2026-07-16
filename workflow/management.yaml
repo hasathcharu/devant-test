@@ -1,0 +1,1754 @@
+openapi: 3.0.1
+info:
+  title: Workflow
+  version: 0.1.0
+servers:
+- url: "{server}:{port}/workflow"
+  variables:
+    server:
+      default: http://localhost
+    port:
+      default: "8234"
+paths:
+  /definitions:
+    get:
+      summary: Lists all registered workflow types with schema and worker info.
+      operationId: getDefinitions
+      parameters:
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows:
+    get:
+      summary: Lists workflow instances with optional status/type/id/time filters
+        and pagination.
+      operationId: getWorkflows
+      parameters:
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: startTimeFrom
+        in: query
+        description: Optional ISO-8601 lower bound on workflow start time.
+        schema:
+          type: string
+          nullable: true
+      - name: startedBy
+        in: query
+        description: Filter by starter user ID captured from `x-user-id` on workflow
+          start.
+        schema:
+          type: string
+          nullable: true
+      - name: startTimeTo
+        in: query
+        description: Optional ISO-8601 upper bound on workflow start time.
+        schema:
+          type: string
+          nullable: true
+      - name: closeTimeTo
+        in: query
+        description: Optional ISO-8601 upper bound on workflow close time.
+        schema:
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int64
+          default: 20
+      - name: closeTimeFrom
+        in: query
+        description: Optional ISO-8601 lower bound on workflow close time.
+        schema:
+          type: string
+          nullable: true
+      - name: workflowType
+        in: query
+        description: Filter by workflow type name.
+        schema:
+          type: string
+          nullable: true
+      - name: pageToken
+        in: query
+        description: Pagination cursor from a previous response.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      - name: workflowId
+        in: query
+        description: Filter by workflow ID prefix.
+        schema:
+          type: string
+          nullable: true
+      - name: status
+        in: query
+        description: "Filter by workflow status (e.g. `RUNNING`, `COMPLETED`)."
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+    post:
+      summary: Starts a new workflow instance.
+      operationId: postWorkflows
+      parameters:
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      requestBody:
+        description: "Request body containing `workflowType`, optional `input`, `workflowId`,\
+          \ and `timeoutSeconds`."
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                - {}
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}:
+    get:
+      summary: Returns execution info for the latest run of a workflow.
+      operationId: getWorkflowsWorkflowid
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/suspend:
+    post:
+      summary: Suspends the latest active run of a workflow.
+      operationId: postWorkflowsWorkflowidSuspend
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/resume:
+    post:
+      summary: Resumes the latest suspended run of a workflow.
+      operationId: postWorkflowsWorkflowidResume
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/terminate:
+    post:
+      summary: Terminates the latest run of a workflow immediately.
+      operationId: postWorkflowsWorkflowidTerminate
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      requestBody:
+        description: Optional request body with a `reason` string.
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/cancel:
+    post:
+      summary: Requests graceful cancellation of the latest run of a workflow.
+      operationId: postWorkflowsWorkflowidCancel
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/history:
+    get:
+      summary: Returns all execution history events for the latest run of a workflow.
+      operationId: getWorkflowsWorkflowidHistory
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/activity-tree:
+    get:
+      summary: Returns the activity tree for the latest run of a workflow.
+      operationId: getWorkflowsWorkflowidActivityTree
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/execution-graph:
+    get:
+      summary: Returns the execution graph for the latest run of a workflow.
+      operationId: getWorkflowsWorkflowidExecutionGraph
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}:
+    get:
+      summary: Returns execution info for a specific workflow run.
+      operationId: getWorkflowsWorkflowidRunid
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}/suspend:
+    post:
+      summary: Suspends a running workflow.
+      operationId: postWorkflowsWorkflowidRunidSuspend
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}/resume:
+    post:
+      summary: Resumes a suspended workflow.
+      operationId: postWorkflowsWorkflowidRunidResume
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}/terminate:
+    post:
+      summary: Terminates a workflow immediately.
+      operationId: postWorkflowsWorkflowidRunidTerminate
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      requestBody:
+        description: Optional request body with a `reason` string.
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}/cancel:
+    post:
+      summary: Requests graceful cancellation of a workflow.
+      operationId: postWorkflowsWorkflowidRunidCancel
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}/history:
+    get:
+      summary: Returns all execution history events for a workflow run.
+      operationId: getWorkflowsWorkflowidRunidHistory
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}/activity-tree:
+    get:
+      summary: Returns the activity tree for a workflow run.
+      operationId: getWorkflowsWorkflowidRunidActivityTree
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /workflows/{workflowId}/{runId}/execution-graph:
+    get:
+      summary: Returns the execution graph for rendering with D3.js or React Flow.
+      operationId: getWorkflowsWorkflowidRunidExecutionGraph
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      - name: runId
+        in: path
+        description: The specific run ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /human-tasks:
+    get:
+      summary: Lists human tasks with optional filters and pagination.
+      operationId: getHumanTasks
+      parameters:
+      - name: startTimeFrom
+        in: query
+        description: Optional ISO-8601 lower bound on task start time.
+        schema:
+          type: string
+          nullable: true
+      - name: closeTimeTo
+        in: query
+        description: Optional ISO-8601 upper bound on task close time.
+        schema:
+          type: string
+          nullable: true
+      - name: closeTimeFrom
+        in: query
+        description: Optional ISO-8601 lower bound on task close time.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: parentWorkflowId
+        in: query
+        description: Filter by parent workflow ID.
+        schema:
+          type: string
+          nullable: true
+      - name: parentWorkflowType
+        in: query
+        description: Filter by parent workflow type.
+        schema:
+          type: string
+          nullable: true
+      - name: startTimeTo
+        in: query
+        description: Optional ISO-8601 upper bound on task start time.
+        schema:
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int64
+          default: 20
+      - name: taskName
+        in: query
+        description: Filter by task name.
+        schema:
+          type: string
+          nullable: true
+      - name: onlyMyTasks
+        in: query
+        description: "When `true`, returns only tasks assigned to the calling user."
+        schema:
+          type: boolean
+          default: false
+      - name: pageToken
+        in: query
+        description: Pagination cursor from a previous response.
+        schema:
+          type: string
+          nullable: true
+      - name: userRole
+        in: query
+        description: Filter to tasks assigned to this role.
+        schema:
+          type: string
+          nullable: true
+      - name: status
+        in: query
+        description: "Filter by task status (e.g. `PENDING`, `COMPLETED`)."
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /human-tasks/pending-count:
+    get:
+      summary: Returns count of pending human tasks (for UI badge).
+      operationId: getHumanTasksPendingCount
+      parameters:
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /human-tasks/{taskId}:
+    get:
+      summary: Returns detailed info for a single human task.
+      operationId: getHumanTasksTaskid
+      parameters:
+      - name: taskId
+        in: path
+        description: The human task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /human-tasks/{taskId}/complete:
+    post:
+      summary: Completes a human task with the given result.
+      operationId: postHumanTasksTaskidComplete
+      parameters:
+      - name: taskId
+        in: path
+        description: The human task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      requestBody:
+        description: Request body containing the task `result`.
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "422":
+          description: UnprocessableEntity
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "409":
+          description: Conflict
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /human-tasks/{taskId}/fail:
+    post:
+      summary: Fails/rejects a human task with a reason.
+      operationId: postHumanTasksTaskidFail
+      parameters:
+      - name: taskId
+        in: path
+        description: The human task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      requestBody:
+        description: Request body containing the `reason` string and optional `details`
+          object.
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "422":
+          description: UnprocessableEntity
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "409":
+          description: Conflict
+  /human-tasks/{taskId}/cancel:
+    post:
+      summary: Cancels a human task (terminates the child workflow).
+      operationId: postHumanTasksTaskidCancel
+      parameters:
+      - name: taskId
+        in: path
+        description: The human task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "409":
+          description: Conflict
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /retry-tasks:
+    get:
+      summary: Lists manual retry tasks with optional filters and pagination.
+      operationId: getRetryTasks
+      parameters:
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: parentWorkflowId
+        in: query
+        description: Filter by parent workflow ID.
+        schema:
+          type: string
+          nullable: true
+      - name: startTimeFrom
+        in: query
+        description: Optional ISO-8601 lower bound on task start time.
+        schema:
+          type: string
+          nullable: true
+      - name: startTimeTo
+        in: query
+        description: Optional ISO-8601 upper bound on task start time.
+        schema:
+          type: string
+          nullable: true
+      - name: closeTimeTo
+        in: query
+        description: Optional ISO-8601 upper bound on task close time.
+        schema:
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int64
+          default: 20
+      - name: closeTimeFrom
+        in: query
+        description: Optional ISO-8601 lower bound on task close time.
+        schema:
+          type: string
+          nullable: true
+      - name: taskName
+        in: query
+        description: Filter by task name.
+        schema:
+          type: string
+          nullable: true
+      - name: pageToken
+        in: query
+        description: Pagination cursor from a previous response.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      - name: status
+        in: query
+        description: "Filter by task status (e.g. `PENDING`, `COMPLETED`)."
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /retry-tasks/{taskId}:
+    get:
+      summary: Returns detailed info for a single retry task.
+      operationId: getRetryTasksTaskid
+      parameters:
+      - name: taskId
+        in: path
+        description: The retry task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: NotFound
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /retry-tasks/{taskId}/retry:
+    post:
+      summary: Retries the failed activity with the original input.
+      operationId: postRetryTasksTaskidRetry
+      parameters:
+      - name: taskId
+        in: path
+        description: The retry task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "409":
+          description: Conflict
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /retry-tasks/{taskId}/retry-with-input:
+    post:
+      summary: Retries the failed activity with modified input.
+      operationId: postRetryTasksTaskidRetryWithInput
+      parameters:
+      - name: taskId
+        in: path
+        description: The retry task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      requestBody:
+        description: Request body containing the replacement `input` object.
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "409":
+          description: Conflict
+  /retry-tasks/{taskId}/fail:
+    post:
+      summary: Permanently fails the activity (cancels further retries).
+      operationId: postRetryTasksTaskidFail
+      parameters:
+      - name: taskId
+        in: path
+        description: The retry task workflow ID.
+        required: true
+        schema:
+          type: string
+      - name: x-user-roles
+        in: header
+        description: Optional comma-separated roles from the `x-user-roles` header.
+        schema:
+          type: string
+          nullable: true
+      - name: x-user-id
+        in: header
+        description: Optional caller identity from the `x-user-id` header.
+        schema:
+          type: string
+          nullable: true
+      responses:
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "401":
+          description: Unauthorized
+        "503":
+          description: ServiceUnavailable
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Forbidden
+        "404":
+          description: NotFound
+        "409":
+          description: Conflict
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+components:
+  schemas:
+    ErrorPayload:
+      required:
+      - message
+      - method
+      - path
+      - reason
+      - status
+      - timestamp
+      type: object
+      properties:
+        timestamp:
+          type: string
+        status:
+          type: integer
+          format: int64
+        reason:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        method:
+          type: string

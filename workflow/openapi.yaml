@@ -1,0 +1,226 @@
+openapi: 3.0.1
+info:
+  title: Api
+  version: 0.1.0
+servers:
+- url: "{server}:{port}/api"
+  variables:
+    server:
+      default: http://localhost
+    port:
+      default: "8090"
+paths:
+  /orders:
+    post:
+      summary: Starts a new order processing workflow.
+      operationId: postOrders
+      requestBody:
+        description: "Order details including orderId, item, and amount."
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                required:
+                - workflowId
+                type: object
+                properties:
+                  workflowId:
+                    type: string
+                additionalProperties: false
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /orders/{workflowId}/tasks:
+    get:
+      summary: |-
+        Lists pending approval task groups for a workflow, sorted alphabetically by task name.
+        Returns an empty array if the workflow has no pending human tasks.
+      operationId: getOrdersWorkflowidTasks
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HumanTaskGroup"
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /tasks/{taskId}/complete:
+    post:
+      summary: |-
+        Submits a manager's approval decision for a pending task.
+        workflowCompleteHumanTask sends a "taskCompletion" signal to the child workflow,
+        unblocking the parent and returning the typed decision to the workflow.
+      operationId: postTasksTaskidComplete
+      parameters:
+      - name: taskId
+        in: path
+        description: The human task workflow ID.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The approval or rejection decision.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalDecision"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                required:
+                - status
+                type: object
+                properties:
+                  status:
+                    type: string
+                additionalProperties: false
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+  /orders/{workflowId}:
+    get:
+      summary: Retrieves the final result of a workflow. Blocks until the workflow
+        completes.
+      operationId: getOrdersWorkflowid
+      parameters:
+      - name: workflowId
+        in: path
+        description: The workflow instance ID.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorPayload"
+components:
+  schemas:
+    ApprovalDecision:
+      required:
+      - approved
+      - reason
+      type: object
+      properties:
+        approved:
+          type: boolean
+        reason:
+          type: string
+          nullable: true
+      additionalProperties: false
+      description: Approval decision submitted by a manager via the task inbox.
+    ErrorPayload:
+      required:
+      - message
+      - method
+      - path
+      - reason
+      - status
+      - timestamp
+      type: object
+      properties:
+        timestamp:
+          type: string
+        status:
+          type: integer
+          format: int64
+        reason:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        method:
+          type: string
+    HumanTaskGroup:
+      required:
+      - taskIds
+      - taskName
+      type: object
+      properties:
+        taskName:
+          type: string
+        taskIds:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+      description: Groups human task instances by task type for a single parent workflow.
+    OrderInput:
+      required:
+      - amount
+      - item
+      - orderId
+      type: object
+      properties:
+        orderId:
+          type: string
+        item:
+          type: string
+        amount:
+          type: number
+          format: double
+      additionalProperties: false
