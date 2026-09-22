@@ -1,7 +1,7 @@
 import ballerina/ai;
 import ballerina/http;
 
-listener ai:Listener mathTutorListener = new (listenOn = check new http:Listener(9080));
+listener ai:Listener mathTutorListener = new (listenOn = check new http:Listener(8080));
 listener ai:Listener mathTutor2Listener = new (listenOn= check new http:Listener(9090));
 
 service /MathTutor on mathTutorListener {
