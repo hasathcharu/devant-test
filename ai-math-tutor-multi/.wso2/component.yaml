@@ -1,0 +1,19 @@
+schemaVersion: 1.1
+
+endpoints:
+  - name: chat_service_1
+    displayName: Agent 1
+    service:
+      basePath: /
+      port: 8080
+    type: REST
+    networkVisibilities:
+      - Public
+  - name: chat_service_2
+    displayName: Agent 2
+    service:
+      basePath: /
+      port: 9090
+    type: REST
+    networkVisibilities:
+      - Public
