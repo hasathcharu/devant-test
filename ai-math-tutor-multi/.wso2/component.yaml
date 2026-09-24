@@ -4,7 +4,7 @@ endpoints:
   - name: chat_service_1
     displayName: Agent 1
     service:
-      basePath: /
+      basePath: /chat
       port: 8080
     type: REST
     networkVisibilities:
@@ -12,7 +12,7 @@ endpoints:
   - name: chat_service_2
     displayName: Agent 2
     service:
-      basePath: /
+      basePath: /chat
       port: 9090
     type: REST
     networkVisibilities:
