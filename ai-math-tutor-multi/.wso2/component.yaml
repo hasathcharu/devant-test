@@ -4,16 +4,18 @@ endpoints:
   - name: chat_service_1
     displayName: Agent 1
     service:
-      basePath: /chat
+      basePath: /
       port: 8080
     type: REST
     networkVisibilities:
       - Public
+    schemaFilePath: Agent1.yaml
   - name: chat_service_2
     displayName: Agent 2
     service:
-      basePath: /chat
+      basePath: /
       port: 9090
     type: REST
     networkVisibilities:
       - Public
+    schemaFilePath: Agent2.yaml
