@@ -7,7 +7,7 @@ service /general on new http:Listener(8080) {
         io:println("Assertion: ");
         io:println(x\-jwt\-assertion);
         io:println("Authorization: ");
-        io:println(x\-jwt\-assertion);
+        io:println(Authorization);
         return "Success";
     }
 }
