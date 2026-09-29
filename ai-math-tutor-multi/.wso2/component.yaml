@@ -4,7 +4,7 @@ endpoints:
   - name: chat_service_1
     displayName: Agent 1
     service:
-      basePath: /
+      basePath: /MathTutor
       port: 8080
     type: REST
     networkVisibilities:
@@ -13,9 +13,18 @@ endpoints:
   - name: chat_service_2
     displayName: Agent 2
     service:
-      basePath: /
+      basePath: /MathTutor
       port: 9090
     type: REST
     networkVisibilities:
       - Public
     schemaFilePath: Agent2.yaml
+  - name: generic_http
+    displayName: Generic HTTP
+    service:
+      basePath: /http
+      port: 7070
+    type: REST
+    networkVisibilities:
+      - Public
+    schemaFilePath: Http.yaml
