@@ -16,15 +16,15 @@
 
 # A purchase request raised by an employee.
 #
-# + requestId - Unique identifier of the request, e.g. `PR-1001`
 # + employee - Name of the employee raising the request
 # + item - What is being purchased
 # + amount - Total cost in USD
+# + purpose - Why the purchase is needed, shown to the approver
 type PurchaseRequest record {|
-    string requestId;
     string employee;
     string item;
     decimal amount;
+    string purpose;
 |};
 
 # Decision submitted by a Finance approver from the task inbox.
@@ -38,13 +38,11 @@ type ApprovalDecision record {|
 
 # Final outcome of a purchase request.
 #
-# + requestId - Identifier of the original request
 # + status - `ORDERED` if the purchase went ahead, `REJECTED` otherwise
 # + approvedBy - Who approved the purchase: the Finance approver, or `Auto-approved`
 # + orderNumber - Purchase order number, present only when the item was ordered
 # + message - Human-readable summary of the outcome
 type PurchaseResult record {|
-    string requestId;
     "ORDERED"|"REJECTED" status;
     string approvedBy?;
     string orderNumber?;

@@ -16,6 +16,7 @@
 
 import ballerina/io;
 import ballerina/lang.runtime;
+import ballerina/random;
 import ballerina/workflow;
 
 // Activities are stubs for the demo. Each one pauses briefly so the steps
@@ -24,17 +25,21 @@ import ballerina/workflow;
 # Remaining department budget in USD. Requests above this are rejected outright.
 configurable decimal departmentBudget = 10000.00;
 
-# Checks that the request has a description and a positive amount.
+# Checks that the request names an item, gives a purpose and has a positive amount.
 #
 # + item - What is being purchased
 # + amount - Total cost in USD
+# + purpose - Why the purchase is needed
 # + return - `Valid` if the request is well-formed, or an error
 @workflow:Activity
-function validateRequest(string item, decimal amount) returns string|error {
-    io:println(string `[Validate] ${item}, $${amount}`);
+function validateRequest(string item, decimal amount, string purpose) returns string|error {
+    io:println(string `[Validate] ${item}, $${amount}, purpose: ${purpose}`);
     runtime:sleep(1);
     if item.trim() == "" {
         return error("Item must not be empty");
+    }
+    if purpose.trim() == "" {
+        return error("Purpose must not be empty");
     }
     if amount <= 0d {
         return error("Amount must be greater than zero");
@@ -56,14 +61,14 @@ function checkBudget(string employee, decimal amount) returns boolean|error {
 
 # Places the purchase order with the supplier.
 #
-# + requestId - Identifier of the purchase request
 # + item - What is being purchased
 # + return - The purchase order number, or an error
 @workflow:Activity
-function placeOrder(string requestId, string item) returns string|error {
+function placeOrder(string item) returns string|error {
     io:println(string `[Order] Placing order for ${item}`);
     runtime:sleep(1);
-    return string `PO-${requestId}`;
+    int orderId = check random:createIntInRange(10000, 100000);
+    return string `PO-${orderId}`;
 }
 
 # Tells the employee what happened to their request.

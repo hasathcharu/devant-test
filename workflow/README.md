@@ -26,7 +26,7 @@ Start each run from the Devant console with the input shown.
 **1. Auto-approved**: a small purchase goes straight through.
 
 ```json
-{ "requestId": "PR-1001", "employee": "Jane Doe", "item": "Wireless mouse", "amount": 45.00 }
+{ "employee": "Jane Doe", "item": "Wireless mouse", "amount": 45.00, "purpose": "Replacing a broken mouse" }
 ```
 
 The result is `ORDERED`, with `approvedBy: "Auto-approved"`.
@@ -34,7 +34,7 @@ The result is `ORDERED`, with `approvedBy: "Auto-approved"`.
 **2. Needs approval**: a high-value purchase pauses for Finance.
 
 ```json
-{ "requestId": "PR-1002", "employee": "Jane Doe", "item": "MacBook Pro", "amount": 2499.00 }
+{ "employee": "Jane Doe", "item": "MacBook Pro", "amount": 2499.00, "purpose": "Laptop for the new iOS developer joining next week" }
 ```
 
 The run waits at the approval step. A task titled *Approve MacBook Pro for Jane Doe ($2499.00)* appears in the inbox for the `Finance` role. Approve it and the run finishes as `ORDERED`, with the approver's name in `approvedBy`. Reject it, or submit with `approved` unticked, and the run finishes as `REJECTED` with the reason.
@@ -44,7 +44,7 @@ Optional: while the run is paused, restart the integration. The run is still wai
 **3. Over budget**: rejected without anyone being asked.
 
 ```json
-{ "requestId": "PR-1003", "employee": "Jane Doe", "item": "Company car", "amount": 45000.00 }
+{ "employee": "Jane Doe", "item": "Company car", "amount": 45000.00, "purpose": "Client visits" }
 ```
 
 The result is `REJECTED`, and no task is created.
