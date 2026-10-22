@@ -16,17 +16,13 @@
 
 import ballerina/workflow;
 
-# Purchases above this amount (USD) need Finance approval. Lower amounts are auto-approved.
-configurable decimal approvalThreshold = 500.00;
-
-# Purchase approval with a human in the loop.
+# Purchase approval with people in the loop.
 #
-# 1. Validate the request
-# 2. Reject it if it is over the department budget
-# 3. Pause for Finance approval if it is above the approval threshold
-# 4. Place the order and notify the employee
+# 1. Check the predicted cost against the department budget
+# 2. A Finance approver approves or rejects the request
+# 3. A different Finance buyer makes the purchase and records the vendor and actual amount
 #
-# The workflow is durable while it waits for approval: restarting the worker does not lose the request.
+# The workflow is durable while it waits on people: restarting the worker does not lose the request.
 #
 # + ctx - Workflow context for calling activities
 # + request - The purchase request
@@ -34,56 +30,76 @@ configurable decimal approvalThreshold = 500.00;
 @workflow:Workflow
 function purchaseApproval(workflow:Context ctx, PurchaseRequest request) returns PurchaseResult|error {
 
-    // Step 1: Validate the request
-    string _ = check ctx->callActivity(validateRequest,
-            {"item": request.item, "amount": request.amount, "purpose": request.purpose});
-
-    // Step 2: Check the department budget
+    // Step 1: Check the department budget
     boolean withinBudget = check ctx->callActivity(checkBudget,
-            {"employee": request.employee, "amount": request.amount});
+            {"item": request.item, "predictedCost": request.predictedCost});
     if !withinBudget {
-        string message = string `Your request for ${request.item} exceeds the remaining department budget.`;
-        string _ = check ctx->callActivity(notifyRequester, {"employee": request.employee, "message": message});
-        return {status: "REJECTED", message};
+        return {
+            status: "REJECTED",
+            predictedCost: request.predictedCost,
+            message: string `${request.item} exceeds the remaining department budget.`
+        };
     }
 
-    // Step 3: Ask Finance to approve high-value purchases
-    string approvedBy = "Auto-approved";
-    if request.amount > approvalThreshold {
-        ApprovalDecision|workflow:HumanTaskError decision = ctx->awaitHumanTask("approvePurchase",
-                {
-                    employee: request.employee,
-                    item: request.item,
-                    amount: request.amount,
-                    purpose: request.purpose
-                },
-                userRoles = "Finance",
-                title = string `Approve ${request.item} for ${request.employee} ($${request.amount})`,
-                description = string `${request.employee} wants to buy ${request.item} for $${request.amount}: ${request.purpose}. `
-                    + string `Purchases above $${approvalThreshold} need Finance approval.`);
-
-        // The approver can reject from the inbox, or submit the form with "approved" unticked
-        string? rejectionReason = ();
-        if decision is workflow:HumanTaskRejectedError {
-            rejectionReason = decision.detail().reason;
-        } else if decision is workflow:HumanTaskError {
-            return decision;
-        } else if !decision.approved {
-            rejectionReason = decision.reason ?: "no reason given";
+    // Step 2: Finance approves the request
+    string|error approval = ctx->callActivity(approvePurchase,
+            {
+                "employee": request.employee,
+                "item": request.item,
+                "predictedCost": request.predictedCost,
+                "purpose": request.purpose
+            },
+            approvalPolicy = {
+                userRoles: "Finance",
+                title: string `Approve ${request.item} for ${request.employee} ($${request.predictedCost})`,
+                description: string `${request.employee} wants to buy ${request.item}, predicted to cost `
+                    + string `$${request.predictedCost}. Purpose: ${request.purpose}`
+            });
+    if approval is error {
+        if approval is workflow:ReviewRejectedError {
+            return {
+                status: "REJECTED",
+                predictedCost: request.predictedCost,
+                message: string `Finance rejected the request: ${approval.detail().feedback ?: "no reason given"}`
+            };
         }
+        return approval;
+    }
+    string approvedBy = ctx.lastReviewDecision()?.decidedBy ?: "Finance";
 
-        if rejectionReason is string {
-            string message = string `Finance rejected your request for ${request.item}: ${rejectionReason}`;
-            string _ = check ctx->callActivity(notifyRequester, {"employee": request.employee, "message": message});
-            return {status: "REJECTED", message};
+    // Step 3: A different Finance member buys the item and records what was paid
+    PurchaseDetails|workflow:HumanTaskError purchase = ctx->awaitHumanTask("purchaseItem",
+            {
+                employee: request.employee,
+                item: request.item,
+                predictedCost: request.predictedCost,
+                purpose: request.purpose,
+                approvedBy
+            },
+            userRoles = "Finance",
+            excludedUsers = approvedBy,
+            title = string `Purchase ${request.item} for ${request.employee}`,
+            description = string `Approved by ${approvedBy}, predicted to cost $${request.predictedCost}. `
+                + "Buy the item, then enter the vendor and the actual amount paid.");
+    if purchase is error {
+        if purchase is workflow:HumanTaskRejectedError {
+            return {
+                status: "REJECTED",
+                approvedBy,
+                predictedCost: request.predictedCost,
+                message: string `The purchase was not made: ${purchase.detail().reason}`
+            };
         }
-        approvedBy = ctx.lastHumanTaskCompletion()?.completedBy ?: "Finance";
+        return purchase;
     }
 
-    // Step 4: Place the order and let the employee know
-    string orderNumber = check ctx->callActivity(placeOrder, {"item": request.item});
-    string message = string `Your ${request.item} has been ordered (${orderNumber}).`;
-    string _ = check ctx->callActivity(notifyRequester, {"employee": request.employee, "message": message});
-
-    return {status: "ORDERED", approvedBy, orderNumber, message};
+    return {
+        status: "PURCHASED",
+        approvedBy,
+        purchasedBy: ctx.lastHumanTaskCompletion()?.completedBy ?: "Finance",
+        vendor: purchase.vendor,
+        predictedCost: request.predictedCost,
+        actualAmount: purchase.actualAmount,
+        message: string `Bought ${request.item} from ${purchase.vendor} for $${purchase.actualAmount}.`
+    };
 }

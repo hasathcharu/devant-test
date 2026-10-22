@@ -1,50 +1,46 @@
 # Purchase Approval Workflow
 
-A durable workflow that approves employee purchase requests, with a Finance approver in the loop for high-value items.
+A durable workflow for employee purchase requests: a budget check, then a Finance approval, then a Finance buyer makes the purchase.
 
 ```
-validateRequest → checkBudget → (Finance approval if > $500) → placeOrder → notifyRequester
+checkBudget → approvePurchase (Finance approval) → purchaseItem (Finance task: vendor and actual amount)
 ```
 
 | File | Contents |
 | --- | --- |
 | `workflow.bal` | The `purchaseApproval` workflow |
-| `activities.bal` | The steps it calls (demo stubs, about 1 second each) |
-| `types.bal` | Request, approval form and result types |
+| `activities.bal` | `checkBudget`, and `approvePurchase`, which runs only once Finance approves |
+| `types.bal` | Request, purchase form and result types |
 
 ## Configuration
 
 | Name | Default | Meaning |
 | --- | --- | --- |
-| `approvalThreshold` | `500.00` | Purchases above this need Finance approval |
-| `departmentBudget` | `10000.00` | Purchases above this are rejected without review |
+| `departmentBudget` | `10000.00` | Requests predicted to cost more than this are rejected without review |
 
 ## Demo script
 
-Start each run from the Devant console with the input shown.
+Start each run from the Devant console. You need two users with the `Finance` role, because the person who approves a request can't also buy it.
 
-**1. Auto-approved**: a small purchase goes straight through.
-
-```json
-{ "employee": "Jane Doe", "item": "Wireless mouse", "amount": 45.00, "purpose": "Replacing a broken mouse" }
-```
-
-The result is `ORDERED`, with `approvedBy: "Auto-approved"`.
-
-**2. Needs approval**: a high-value purchase pauses for Finance.
+**1. Approve and buy**
 
 ```json
-{ "employee": "Jane Doe", "item": "MacBook Pro", "amount": 2499.00, "purpose": "Laptop for the new iOS developer joining next week" }
+{ "employee": "Jane Doe", "item": "MacBook Pro", "predictedCost": 2499.00, "purpose": "Laptop for the new iOS developer joining next week" }
 ```
 
-The run waits at the approval step. A task titled *Approve MacBook Pro for Jane Doe ($2499.00)* appears in the inbox for the `Finance` role. Approve it and the run finishes as `ORDERED`, with the approver's name in `approvedBy`. Reject it, or submit with `approved` unticked, and the run finishes as `REJECTED` with the reason.
+1. The run passes the budget check and waits for approval. An approval titled *Approve MacBook Pro for Jane Doe ($2499.00)* appears for `Finance`.
+2. Finance user A approves it.
+3. A task titled *Purchase MacBook Pro for Jane Doe* appears for `Finance`, but not for user A.
+4. Finance user B enters the vendor and the actual amount, e.g. `Apple Store` and `2399.00`.
 
-Optional: while the run is paused, restart the integration. The run is still waiting afterwards, which shows durability.
+The result is `PURCHASED`, showing who approved, who bought it, the vendor, and the predicted and actual amounts.
+
+Optional: while the run is waiting on a person, restart the integration. The run is still waiting afterwards, which shows durability.
+
+**2. Rejected by Finance**: start the same input and reject it at the approval step. The result is `REJECTED`, with the approver's feedback.
 
 **3. Over budget**: rejected without anyone being asked.
 
 ```json
-{ "employee": "Jane Doe", "item": "Company car", "amount": 45000.00, "purpose": "Client visits" }
+{ "employee": "Jane Doe", "item": "Company car", "predictedCost": 45000.00, "purpose": "Client visits" }
 ```
-
-The result is `REJECTED`, and no task is created.

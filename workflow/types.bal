@@ -18,33 +18,39 @@
 #
 # + employee - Name of the employee raising the request
 # + item - What is being purchased
-# + amount - Total cost in USD
-# + purpose - Why the purchase is needed, shown to the approver
+# + predictedCost - Estimated cost in USD
+# + purpose - Why the purchase is needed, shown to Finance
 type PurchaseRequest record {|
     string employee;
     string item;
-    decimal amount;
+    decimal predictedCost;
     string purpose;
 |};
 
-# Decision submitted by a Finance approver from the task inbox.
+# What the Finance buyer records after making the purchase.
 #
-# + approved - Approve (true) or reject (false) the purchase
-# + reason - Optional note explaining the decision
-type ApprovalDecision record {|
-    boolean approved;
-    string reason?;
+# + vendor - Who the item was bought from
+# + actualAmount - What was actually paid, in USD
+type PurchaseDetails record {|
+    string vendor;
+    decimal actualAmount;
 |};
 
 # Final outcome of a purchase request.
 #
-# + status - `ORDERED` if the purchase went ahead, `REJECTED` otherwise
-# + approvedBy - Who approved the purchase: the Finance approver, or `Auto-approved`
-# + orderNumber - Purchase order number, present only when the item was ordered
+# + status - `PURCHASED` if the item was bought, `REJECTED` otherwise
+# + approvedBy - The Finance approver
+# + purchasedBy - The Finance buyer
+# + vendor - Who the item was bought from
+# + predictedCost - Estimated cost from the request, in USD
+# + actualAmount - What was actually paid, in USD
 # + message - Human-readable summary of the outcome
 type PurchaseResult record {|
-    "ORDERED"|"REJECTED" status;
+    "PURCHASED"|"REJECTED" status;
     string approvedBy?;
-    string orderNumber?;
+    string purchasedBy?;
+    string vendor?;
+    decimal predictedCost;
+    decimal actualAmount?;
     string message;
 |};

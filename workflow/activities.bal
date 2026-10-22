@@ -15,70 +15,33 @@
 // under the License.
 
 import ballerina/io;
-import ballerina/lang.runtime;
-import ballerina/random;
 import ballerina/workflow;
 
-// Activities are stubs for the demo. Each one pauses briefly so the steps
-// are easy to follow on the execution timeline.
-
-# Remaining department budget in USD. Requests above this are rejected outright.
+# Remaining department budget in USD. Requests predicted to cost more are rejected outright.
 configurable decimal departmentBudget = 10000.00;
-
-# Checks that the request names an item, gives a purpose and has a positive amount.
-#
-# + item - What is being purchased
-# + amount - Total cost in USD
-# + purpose - Why the purchase is needed
-# + return - `Valid` if the request is well-formed, or an error
-@workflow:Activity
-function validateRequest(string item, decimal amount, string purpose) returns string|error {
-    io:println(string `[Validate] ${item}, $${amount}, purpose: ${purpose}`);
-    runtime:sleep(1);
-    if item.trim() == "" {
-        return error("Item must not be empty");
-    }
-    if purpose.trim() == "" {
-        return error("Purpose must not be empty");
-    }
-    if amount <= 0d {
-        return error("Amount must be greater than zero");
-    }
-    return "Valid";
-}
 
 # Checks whether the department still has budget for this purchase.
 #
-# + employee - Employee raising the request
-# + amount - Total cost in USD
-# + return - true if the amount fits in the remaining budget
-@workflow:Activity
-function checkBudget(string employee, decimal amount) returns boolean|error {
-    io:println(string `[Budget] ${employee} requested $${amount} (remaining budget $${departmentBudget})`);
-    runtime:sleep(1);
-    return amount <= departmentBudget;
-}
-
-# Places the purchase order with the supplier.
-#
 # + item - What is being purchased
-# + return - The purchase order number, or an error
+# + predictedCost - Estimated cost in USD
+# + return - true if the predicted cost fits in the remaining budget
 @workflow:Activity
-function placeOrder(string item) returns string|error {
-    io:println(string `[Order] Placing order for ${item}`);
-    runtime:sleep(1);
-    int orderId = check random:createIntInRange(10000, 100000);
-    return string `PO-${orderId}`;
+function checkBudget(string item, decimal predictedCost) returns boolean|error {
+    io:println(string `[Budget] ${item}: $${predictedCost} (remaining budget $${departmentBudget})`);
+    return predictedCost <= departmentBudget;
 }
 
-# Tells the employee what happened to their request.
+# Records that Finance approved the purchase. The workflow gates this call behind a
+# Finance approval, so it runs only once someone approves.
 #
-# + employee - Employee to notify
-# + message - Outcome to send
+# + employee - Employee raising the request
+# + item - What is being purchased
+# + predictedCost - Estimated cost in USD
+# + purpose - Why the purchase is needed
 # + return - Confirmation, or an error
 @workflow:Activity
-function notifyRequester(string employee, string message) returns string|error {
-    io:println(string `[Notify] To ${employee}: ${message}`);
-    runtime:sleep(1);
-    return "Sent";
+function approvePurchase(string employee, string item, decimal predictedCost, string purpose)
+        returns string|error {
+    io:println(string `[Approval] Approved ${item} for ${employee} ($${predictedCost}): ${purpose}`);
+    return "Approved";
 }
