@@ -1,31 +1,30 @@
 import ballerina/http;
-import ballerina/log;
 
 listener http:Listener httpDefaultListener = http:getDefaultListener();
 
 service / on httpDefaultListener {
-    resource function get hi() returns json {
-        log:printInfo("GET /hi");
+    resource function get hi(http:Request req) returns json {
+        logRequest(req);
         return {message: "Hi"};
     }
 
-    resource function post hi() returns json {
-        log:printInfo("POST /hi");
+    resource function post hi(http:Request req) returns json {
+        logRequest(req);
         return {message: "Hi"};
     }
 
-    resource function get hello() returns json {
-        log:printInfo("GET /hello");
+    resource function get hello(http:Request req) returns json {
+        logRequest(req);
         return {message: "Hello"};
     }
 
-    resource function put bye() returns json {
-        log:printInfo("PUT /bye");
+    resource function put bye(http:Request req) returns json {
+        logRequest(req);
         return {message: "Bye"};
     }
 
-    resource function get bye() returns json {
-        log:printInfo("GET /bye");
+    resource function get bye(http:Request req) returns json {
+        logRequest(req);
         return {message: "Bye"};
     }
 }
